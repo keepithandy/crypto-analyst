@@ -1,4 +1,4 @@
-import { formatUsd, getDecisionReason } from "../lib/risk";
+import { computeRiskDecision, formatUsd, getDecisionReason } from "../lib/risk";
 import type { CryptoAsset } from "../types";
 import { AnalysisLayer } from "./AnalysisLayer";
 import { DataFreshnessBadge } from "./DataFreshnessBadge";
@@ -11,6 +11,8 @@ type AssetDetailProps = {
 };
 
 export function AssetDetail({ asset }: AssetDetailProps) {
+  const computedDecision = computeRiskDecision(asset);
+
   return (
     <section className="panel detail-panel" aria-labelledby="asset-detail-heading">
       <div className="panel-heading split-heading">
@@ -20,7 +22,7 @@ export function AssetDetail({ asset }: AssetDetailProps) {
             {asset.name} <span>{asset.symbol}</span>
           </h2>
         </div>
-        <DecisionBadge label={asset.decisionLabel} />
+        <DecisionBadge label={computedDecision.label} />
       </div>
 
       <div className="risk-hero">
@@ -37,14 +39,23 @@ export function AssetDetail({ asset }: AssetDetailProps) {
           <strong>1:{asset.riskRewardRatio.toFixed(1)}</strong>
         </div>
         <div>
-          <span>Conviction</span>
-          <strong>{asset.conviction}</strong>
+          <span>Risk score</span>
+          <strong>{computedDecision.score}/7</strong>
         </div>
       </div>
 
       <div className="decision-note">
         <strong>Decision reason</strong>
-        <p>{getDecisionReason(asset)}</p>
+        <p>{getDecisionReason({ ...asset, decisionLabel: computedDecision.label })}</p>
+      </div>
+
+      <div className="decision-note">
+        <strong>Risk engine explanation</strong>
+        <ul>
+          {computedDecision.reasons.map((reason) => (
+            <li key={reason}>{reason}</li>
+          ))}
+        </ul>
       </div>
 
       <div className="level-grid">
@@ -61,7 +72,7 @@ export function AssetDetail({ asset }: AssetDetailProps) {
         <AnalysisLayer title="Macro" body={asset.macroSummary} />
       </section>
 
-      <RiskPanel asset={asset} />
+      <RiskPanel asset={{ ...asset, decisionLabel: computedDecision.label }} />
     </section>
   );
 }
