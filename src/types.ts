@@ -37,3 +37,14 @@ export type CryptoAsset = {
 };
 
 export type DashboardMode = "mock" | "live-research";
+export type DataFreshnessPreference = "show-all" | "flag-stale" | "hide-stale";
+
+export type DashboardSettings = {
+  dashboardMode: "mock";
+  refreshIntervalMinutes: number;
+  darkMode: true;
+  freshnessPreference: DataFreshnessPreference;
+  showEmptyWatchlist: boolean;
+  showConflictState: boolean;
+  showStaleState: boolean;
+};
