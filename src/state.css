@@ -1,0 +1,191 @@
+.state-stack {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.state-notice,
+.empty-state {
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0.9rem;
+}
+
+.state-notice {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.state-notice strong,
+.empty-state strong {
+  line-height: 1.35;
+}
+
+.state-notice p,
+.empty-state p,
+.settings-footnote {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.state-notice.mock {
+  border-color: rgba(125, 211, 252, 0.28);
+  background: rgba(125, 211, 252, 0.08);
+}
+
+.state-notice.warning {
+  border-color: rgba(253, 230, 138, 0.38);
+  background: rgba(253, 230, 138, 0.08);
+}
+
+.state-notice.conflict {
+  border-color: rgba(252, 165, 165, 0.38);
+  background: rgba(252, 165, 165, 0.08);
+}
+
+.state-notice.flat,
+.empty-state {
+  border-color: rgba(203, 213, 225, 0.2);
+  background: rgba(203, 213, 225, 0.06);
+}
+
+.empty-state {
+  min-height: 10rem;
+  display: grid;
+  align-content: center;
+  gap: 0.4rem;
+}
+
+.settings-panel {
+  grid-column: 1 / -1;
+}
+
+.settings-grid {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.setting-row,
+.check-row {
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+  background: rgba(255, 255, 255, 0.035);
+  padding: 0.85rem;
+}
+
+.setting-row {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.setting-row span,
+.check-row,
+.settings-footnote {
+  color: var(--muted);
+}
+
+.setting-row strong {
+  color: var(--text);
+}
+
+.setting-row select {
+  width: 100%;
+  min-height: 2.75rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  color: var(--text);
+  background: var(--panel-strong);
+  padding: 0.55rem 0.7rem;
+}
+
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 3rem;
+}
+
+.check-row input {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.secondary-button {
+  width: 100%;
+  min-height: 2.8rem;
+  border: 1px solid rgba(125, 211, 252, 0.42);
+  border-radius: 0.9rem;
+  color: var(--text);
+  background: rgba(125, 211, 252, 0.08);
+  font-weight: 800;
+}
+
+.settings-footnote {
+  margin-top: 0.85rem;
+}
+
+.decision-note ul {
+  margin-bottom: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.asset-card {
+  min-height: 7rem;
+}
+
+.asset-card:focus-visible,
+.secondary-button:focus-visible,
+.setting-row select:focus-visible,
+.check-row input:focus-visible {
+  outline: 3px solid rgba(125, 211, 252, 0.45);
+  outline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+  .app-shell {
+    padding: 0.7rem;
+  }
+
+  .hero-panel,
+  .panel,
+  .summary-card,
+  .state-notice,
+  .empty-state {
+    border-radius: 1rem;
+  }
+
+  .summary-grid,
+  .risk-hero,
+  .level-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .split-heading,
+  .asset-card-topline,
+  .asset-metrics,
+  .scenario-topline {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  .decision-badge,
+  .probability-check {
+    min-width: 0;
+    width: fit-content;
+  }
+}
+
+@media (min-width: 760px) {
+  .state-stack {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .settings-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
