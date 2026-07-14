@@ -1,17 +1,27 @@
-import { computeRiskDecision, formatUsd, getDecisionReason } from "../lib/risk";
+import {
+  computeRiskDecision,
+  formatUsd,
+  getDecisionReason,
+  getSuggestedDecisionLabel,
+  hasConflictingSignals,
+} from "../lib/risk";
 import type { CryptoAsset } from "../types";
 import { AnalysisLayer } from "./AnalysisLayer";
 import { DataFreshnessBadge } from "./DataFreshnessBadge";
 import { DecisionBadge } from "./DecisionBadge";
 import { Metric } from "./Metric";
 import { RiskPanel } from "./RiskPanel";
+import { StateNotice } from "./StateNotice";
 
 type AssetDetailProps = {
   asset: CryptoAsset;
+  conflictMode?: boolean;
 };
 
-export function AssetDetail({ asset }: AssetDetailProps) {
+export function AssetDetail({ asset, conflictMode = false }: AssetDetailProps) {
   const computedDecision = computeRiskDecision(asset);
+  const suggestedLabel = getSuggestedDecisionLabel(asset);
+  const conflictingSignals = conflictMode || hasConflictingSignals(asset);
 
   return (
     <section className="panel detail-panel" aria-labelledby="asset-detail-heading">
@@ -24,6 +34,14 @@ export function AssetDetail({ asset }: AssetDetailProps) {
         </div>
         <DecisionBadge label={computedDecision.label} />
       </div>
+
+      {conflictingSignals ? (
+        <StateNotice
+          tone="conflict"
+          title="Conflicting setup"
+          body={`Stored label is ${asset.decisionLabel}, while the risk helper suggests ${suggestedLabel}. Review the setup before treating it as active.`}
+        />
+      ) : null}
 
       <div className="risk-hero">
         <div>
