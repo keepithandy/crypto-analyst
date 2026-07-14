@@ -6,6 +6,13 @@ export type RiskDecision = {
   reasons: string[];
 };
 
+export type ConfluenceBand = "strong" | "moderate" | "weak" | "poor";
+export type RiskRewardStatus = "preferred" | "acceptable" | "weak";
+export type ScenarioProbabilityStatus = "valid" | "invalid";
+
+const preferredRiskRewardRatio = 2;
+const minimumRiskRewardRatio = 1.5;
+
 export function formatUsd(value: number): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -28,16 +35,81 @@ export function formatPercent(value: number): string {
   return `${sign}${value.toFixed(1)}%`;
 }
 
+export function getScenarioProbabilityTotal(scenarios: Scenario[]): number {
+  return scenarios.reduce((total, scenario) => total + scenario.probabilityPct, 0);
+}
+
 export function validateScenarioProbabilities(scenarios: Scenario[]): boolean {
-  return scenarios.reduce((total, scenario) => total + scenario.probabilityPct, 0) === 100;
+  return getScenarioProbabilityTotal(scenarios) === 100;
+}
+
+export function getScenarioProbabilityStatus(
+  scenarios: Scenario[],
+): ScenarioProbabilityStatus {
+  return validateScenarioProbabilities(scenarios) ? "valid" : "invalid";
+}
+
+export function getConfluenceBand(score: number): ConfluenceBand {
+  if (score >= 80) {
+    return "strong";
+  }
+
+  if (score >= 65) {
+    return "moderate";
+  }
+
+  if (score >= 55) {
+    return "weak";
+  }
+
+  return "poor";
+}
+
+export function meetsRiskRewardThreshold(
+  riskRewardRatio: number,
+  threshold = preferredRiskRewardRatio,
+): boolean {
+  return riskRewardRatio >= threshold;
+}
+
+export function getRiskRewardStatus(riskRewardRatio: number): RiskRewardStatus {
+  if (riskRewardRatio >= preferredRiskRewardRatio) {
+    return "preferred";
+  }
+
+  if (riskRewardRatio >= minimumRiskRewardRatio) {
+    return "acceptable";
+  }
+
+  return "weak";
 }
 
 function hasDefinedInvalidation(asset: CryptoAsset): boolean {
   return Number.isFinite(asset.invalidationLevel) && asset.invalidationLevel > 0;
 }
 
+export function isAssetDataStale(asset: CryptoAsset): boolean {
+  const normalizedUpdatedAt = asset.lastUpdated.toLowerCase();
+
+  return (
+    normalizedUpdatedAt.includes("mock") ||
+    normalizedUpdatedAt.includes("stale") ||
+    normalizedUpdatedAt.trim().length === 0
+  );
+}
+
 function isMockDataFresh(asset: CryptoAsset): boolean {
   return asset.lastUpdated.toLowerCase().includes("mock") && asset.lastUpdated.trim().length > 0;
+}
+
+export function getSuggestedDecisionLabel(asset: CryptoAsset): DecisionLabel {
+  return computeRiskDecision(asset).label;
+}
+
+export function hasConflictingSignals(asset: CryptoAsset): boolean {
+  const suggestedLabel = getSuggestedDecisionLabel(asset);
+
+  return asset.decisionLabel !== suggestedLabel || getRiskRewardStatus(asset.riskRewardRatio) === "weak";
 }
 
 export function computeRiskDecision(asset: CryptoAsset): RiskDecision {
@@ -60,23 +132,27 @@ export function computeRiskDecision(asset: CryptoAsset): RiskDecision {
     };
   }
 
-  if (asset.confluenceScore >= 80) {
+  const confluenceBand = getConfluenceBand(asset.confluenceScore);
+
+  if (confluenceBand === "strong") {
     score += 3;
     reasons.push("Strong confluence score.");
-  } else if (asset.confluenceScore >= 65) {
+  } else if (confluenceBand === "moderate") {
     score += 2;
     reasons.push("Moderate confluence score.");
-  } else if (asset.confluenceScore >= 55) {
+  } else if (confluenceBand === "weak") {
     score += 1;
     reasons.push("Weak-to-moderate confluence score.");
   } else {
     reasons.push("Confluence is too weak for an active setup.");
   }
 
-  if (asset.riskRewardRatio >= 2) {
+  const riskRewardStatus = getRiskRewardStatus(asset.riskRewardRatio);
+
+  if (riskRewardStatus === "preferred") {
     score += 2;
     reasons.push("Risk/reward is at least 1:2.");
-  } else if (asset.riskRewardRatio >= 1.5) {
+  } else if (riskRewardStatus === "acceptable") {
     score += 1;
     reasons.push("Risk/reward is acceptable but not ideal.");
   } else {
@@ -96,6 +172,11 @@ export function computeRiskDecision(asset: CryptoAsset): RiskDecision {
   if (!isMockDataFresh(asset)) {
     reasons.push("Data freshness is unclear, so the setup should not be treated as active.");
     return { label: "FLAT", score, reasons };
+  }
+
+  if (riskRewardStatus === "weak") {
+    reasons.push("Weak risk/reward forces WATCH or FLAT instead of an active label.");
+    return { label: score >= 4 ? "WATCH" : "FLAT", score, reasons };
   }
 
   if (score >= 6 && asset.trendLabel === "Uptrend") {
